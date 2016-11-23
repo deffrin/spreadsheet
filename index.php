@@ -116,6 +116,7 @@ border-color:red !important;
 //				iHT.setAttribute("class", "hello");
 				iHT.setAttribute("contenteditable", "true");
 
+				iHT.focus();
 				
 				
 				
