@@ -2,8 +2,8 @@
 <html>
 <head><title>Spreadsheet.js</title>
 <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-<!-- <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
- -->
+ <script type="text/javascript" src="js/jquery-3.1.1.min.js"></script>
+ 
 <style type="text/css">
 
 .hello{
@@ -52,6 +52,9 @@ border-color:red !important;
 
 </div>
 
+
+
+
 </div>
 <script type="text/javascript">
 
@@ -75,8 +78,8 @@ border-color:red !important;
 				fields:null,  // fields are comma separated table headings . The number of table headings equal to column count
 				container:null,
 				className:null,
-				clickType:'click'			// possible values click and dblclick
-				
+				clickType:'click',			// possible values click and dblclick
+				validate:null
 			}  
 
 		 	// Create options by extending defaults with the passed in arugments
@@ -100,6 +103,28 @@ border-color:red !important;
 			    
 		  }
 
+		  spreadSheet.prototype.validate = function() {
+
+		    console.log('validating...');
+		    console.log(this.options.validate);
+		    validating_fields = this.options.validate;
+
+		    table =  node.querySelector('table');
+		    
+		    for (i = 0; i < validating_fields.length; i++) { 
+		        // validating_fields[i] 
+		        for (var j = 0, row; row = table.rows[j]; j++) {
+		        	//iterate through rows
+		        	tcell = table.rows[j].cells[i];
+		        	
+		        	if(tcell.innerHTML.trim().length)
+						
+		        }
+		    }
+		    
+			    
+		  }
+
 		  spreadSheet.prototype.cellClicked = function(cellInfo) {
 		
 				//alert("hq");
@@ -112,8 +137,9 @@ border-color:red !important;
 				tr =  node.querySelector('table');
 	console.log(tr);
 				iHT = tr.rows[rowIndex].cells[cellIndex];
-
+	
 //				iHT.setAttribute("class", "hello");
+					iHT.innerHTML="";
 				iHT.setAttribute("contenteditable", "true");
 
 				iHT.focus();
@@ -247,18 +273,20 @@ border-color:red !important;
 
 	spread = new spreadSheet({
 		rows:3,
-		container:'#ele',
-		fields:'Item,Price,Quantity,Total',
-		className:'table table-bordered'
-		});
+		container:'#ele',  // for creating new this is required
+		fields:'Item,Price,Quantity,Total',  // for creating new this is required
+		className:'table table-bordered',
+		validate:[0,2]
+	});
 	
 	spread.build();
 
+
 	function check()
 	{
-		
-		console.log(addB);
+		spread.validate();
 	}
+
 	
 </script>
 
