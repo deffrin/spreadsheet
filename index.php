@@ -10,6 +10,31 @@
 border-color:red !important;
 }
 
+table td{
+height:39px;
+position:relative;
+}
+
+td.cell_error{
+	background:#BEB7A4;
+	
+}
+
+.contextmenu{
+
+	z-index: 9999;
+    position: absolute;
+    left: 20px;
+    background: #C7BFBF;
+    width: 150px;
+    color: #655A5A;
+    padding-left: 20px;
+    
+}
+
+.cell_error:focus{
+
+}
 </style>
 </head>
 <body>
@@ -79,7 +104,8 @@ border-color:red !important;
 				container:null,
 				className:null,
 				clickType:'click',			// possible values click and dblclick
-				validate:null
+				validate:null,
+				avoidable:false
 			}  
 
 		 	// Create options by extending defaults with the passed in arugments
@@ -105,23 +131,42 @@ border-color:red !important;
 
 		  spreadSheet.prototype.validate = function() {
 
+				if(this.options.avoidable)
+				{
+					 avoidUnnecessary();
+				}
 		    console.log('validating...');
 		    console.log(this.options.validate);
 		    validating_fields = this.options.validate;
 
 		    table =  node.querySelector('table');
+			
+		    f=0;
 		    
 		    for (i = 0; i < validating_fields.length; i++) { 
 		        // validating_fields[i] 
-		        for (var j = 0, row; row = table.rows[j]; j++) {
+		       // console.log('outer');
+		        for (var j = 1, row; row = table.rows[j]; j++) {
+			        // j=1 means starting from second row,avoiding 1 st table header ow
+			        
+			        //console.log('inner');
 		        	//iterate through rows
-		        	tcell = table.rows[j].cells[i];
+		        	tcell = table.rows[j].cells[validating_fields[i]];
 		        	
 		        	if(tcell.innerHTML.trim().length)
+		        	{
+			        	tcell.setAttribute('class','');
+		        	}
+		        	else
+		        	{
+						f++;
+			        	tcell.setAttribute('class','cell_error');
+		        	}
 						
 		        }
 		    }
-		    
+
+		    return f;
 			    
 		  }
 
@@ -129,6 +174,10 @@ border-color:red !important;
 		
 				//alert("hq");
 					
+					
+			
+
+				 
 				rowIndex = cellInfo.target.parentNode.rowIndex;
 				cellIndex = cellInfo.target.cellIndex;
 
@@ -137,9 +186,16 @@ border-color:red !important;
 				tr =  node.querySelector('table');
 	console.log(tr);
 				iHT = tr.rows[rowIndex].cells[cellIndex];
-	
+				 first_child =  iHT.getElementsByClassName('contextmenu')[0];
+
+				 if(typeof first_child != "undefined")
+				 first_child.style.display='none';
+				 
 //				iHT.setAttribute("class", "hello");
-					iHT.innerHTML="";
+				if(iHT.innerHTML.trim()=="&nbsp;")
+				iHT.innerHTML="";
+				
+				
 				iHT.setAttribute("contenteditable", "true");
 
 				iHT.focus();
@@ -150,8 +206,85 @@ border-color:red !important;
 				console.log(iHT);
 				
 		  }
-	
-		 
+
+		  function hideAllContextMenu(){
+			    var elements = document.getElementsByClassName('contextmenu')
+
+			    for (var i = 0; i < elements.length; i++){
+			        elements[i].style.display = 'none';
+			    }
+			}
+
+			
+		  function contextMenu(cellInfo)
+		  {
+			  hideAllContextMenu();
+			  
+			  rowIndex = cellInfo.target.parentNode.rowIndex;
+			  cellIndex = cellInfo.target.cellIndex;
+			  tr =  node.querySelector('table');
+
+			  
+			  if(typeof rowIndex !== 'undefined' && typeof cellIndex !== 'undefined')
+			  {
+				iHT = tr.rows[rowIndex].cells[cellIndex];
+
+				iHT.blur();
+				console.log(iHT);
+			  
+			 
+
+			  if(!iHT.hasChildNodes())
+				  {
+				  var div = document.createElement("div");        // Create a <button> element
+				  div.setAttribute("class","contextmenu");
+				  div.innerHTML="hello";
+				  iHT.appendChild(div);          
+			  }
+			  else
+			  {
+				 first_child =  iHT.getElementsByClassName('contextmenu')[0];
+				 first_child.style.display='block';
+				 
+			  }
+			 
+			                       // Append the text to <button>
+		//	  document.body.appendChild(btn);      
+
+			  }
+				  
+		  }
+	 	  function avoidUnnecessary()
+	 	  {
+
+	 		table =  node.querySelector('table');
+	 		to_be_removed=[];
+	 		
+ 		  	for (var j = 2, row; row = table.rows[j]; j++) {
+				//  j=2 means starting from third row
+ 		  		nonempty=0;
+ 		  		for (var k = 0, col; col = row.cells[k]; k++) {
+			        tcell = table.rows[j].cells[k];
+		        	if(tcell.innerHTML.trim().length)
+		        	{
+			        	nonempty++;
+		        	}
+		        }
+		        if(!nonempty)
+			        to_be_removed.push(j);
+				        
+	 	  }
+ 		 	  
+ 		 to_be_removed.reverse();
+ 		   for (l = 0; l < to_be_removed.length; l++) {
+
+ 			  	table.deleteRow(to_be_removed[l]);
+ 			  	
+ 	 	   } 
+ 	 		   
+	 	  }
+ 		 	  
+	 	  
 		  function building()
 		  {
 
@@ -227,10 +360,14 @@ border-color:red !important;
 				while(k)
 				{
 				x = row.insertCell(-1);
-				x.innerHTML="&nbsp;";
+				//x.innerHTML="&nbsp;";
 
 				x.addEventListener(this.options.clickType, this.cellClicked.bind(x));
-					
+				x.addEventListener('contextmenu',contextMenu.bind(x));
+				x.addEventListener("contextmenu", function(e){
+				    e.preventDefault();
+				}, false);
+				
 				
 				k--;
 				l++;
@@ -276,7 +413,8 @@ border-color:red !important;
 		container:'#ele',  // for creating new this is required
 		fields:'Item,Price,Quantity,Total',  // for creating new this is required
 		className:'table table-bordered',
-		validate:[0,2]
+		validate:[0,2],
+		avoidable:true
 	});
 	
 	spread.build();
@@ -284,7 +422,11 @@ border-color:red !important;
 
 	function check()
 	{
-		spread.validate();
+		d=spread.validate();
+		if(d)
+			console.log('not valid');
+		else
+			console.log('valid');
 	}
 
 	
